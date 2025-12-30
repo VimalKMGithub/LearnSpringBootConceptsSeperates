@@ -19,6 +19,19 @@
 #  prometheus_data:
 
 services:
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      # increases the log level from info to debug
+      - GF_LOG_LEVEL=debug
+    ports:
+      - '3000:3000'
+    volumes:
+      - 'grafana_storage:/var/lib/grafana'
+
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -56,3 +69,4 @@ services:
 
 volumes:
   prometheus_data:
+  grafana_storage:
