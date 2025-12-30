@@ -1,19 +1,53 @@
+#services:
+#  prometheus:
+#    image: prom/prometheus:latest
+#    container_name: prometheus
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+#      - ./web.yml:/etc/prometheus/web.yml
+#      - prometheus_data:/prometheus
+#    # We must override the command to add the web.config.file flag
+#    command:
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#      - '--web.config.file=/etc/prometheus/web.yml'
+#      - '--storage.tsdb.path=/prometheus'
+#    restart: unless-stopped
+#
+#volumes:
+#  prometheus_data:
+
+version: '3.8'
+
 services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     ports:
       - "9090:9090"
+    environment:
+      - MY_PASSWORD=${PROMETHEUS_PASSWORD} # Pulls from your .env file
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # Map the template file
+      - ./prometheus.yml.template:/etc/prometheus/prometheus.yml.template
+      # Map web.yml (keep this one static)
       - ./web.yml:/etc/prometheus/web.yml
       - prometheus_data:/prometheus
-    # We must override the command to add the web.config.file flag
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.config.file=/etc/prometheus/web.yml'
-      - '--storage.tsdb.path=/prometheus'
-    restart: unless-stopped
+
+    # We must use "entrypoint" to run a shell so we can use "sed"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        # 1. Replace placeholder with env var and write to a new file in /prometheus (data dir is writable)
+        sed 's/PASSWORD_PLACEHOLDER/'"$MY_PASSWORD"'/g' /etc/prometheus/prometheus.yml.template > /prometheus/prometheus.yml
+        
+        # 2. Start Prometheus using the NEW config file we just created
+        /bin/prometheus \
+          --config.file=/prometheus/prometheus.yml \
+          --web.config.file=/etc/prometheus/web.yml \
+          --storage.tsdb.path=/prometheus
 
 volumes:
   prometheus_data:
