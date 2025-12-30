@@ -1,11 +1,18 @@
-# prometheus.yml.template (NOT prometheus.yml)
+# prometheus.yml.template
 global:
   scrape_interval: 15s
 
 scrape_configs:
+  # JOB 1: Prometheus scraping itself (Using the Placeholder)
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
     basic_auth:
       username: admin
-      password: PASSWORD_PLACEHOLDER  # <--- We will swap this out automatically
+      password: PASSWORD_PLACEHOLDER  # <--- This gets replaced by the script
+
+  # JOB 2: Scraping your Spring Boot App (MUST BE INCLUDED HERE)
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8761']
