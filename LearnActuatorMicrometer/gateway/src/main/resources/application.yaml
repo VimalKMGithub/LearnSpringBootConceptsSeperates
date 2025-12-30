@@ -6,12 +6,12 @@ spring:
       server:
         webmvc:
           routes:
-#            - id: db-service-route
-#              uri: lb://DB-SERVICE
-#              predicates:
-#                - Path=/db-service/**
-#              filters:
-#                - StripPrefix=1
+            - id: client-01-route
+              uri: lb://CLIENT-01
+              predicates:
+                - Path=/client-01/**
+              filters:
+                - StripPrefix=1
 #
 #            - id: identity-service-route
 #              uri: lb://IDENTITY-SERVICE
