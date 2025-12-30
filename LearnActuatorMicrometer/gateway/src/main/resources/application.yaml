@@ -1,3 +1,33 @@
 spring:
   application:
     name: gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+#            - id: db-service-route
+#              uri: lb://DB-SERVICE
+#              predicates:
+#                - Path=/db-service/**
+#              filters:
+#                - StripPrefix=1
+#
+#            - id: identity-service-route
+#              uri: lb://IDENTITY-SERVICE
+#              predicates:
+#                - Path=/identity-service/**
+#              filters:
+#                - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: false
+    registry-fetch-interval-seconds: 5
+  instance:
+    hostname: localhost
+
+server:
+  port: 9000
