@@ -21,11 +21,6 @@ scrape_configs:
     static_configs:
       - targets: ['host.docker.internal:8761']
         # If Eureka is in Docker, use its container name: 'eureka-server:8761'
-    basic_auth:
-      # If you added security to Eureka, put it here.
-      # Often Eureka is left open or uses the same admin credentials.
-      username: myapp_admin
-      password: myapp_password123
 
   # ----------------------------------------------------------------
   # JOB 3: "The Rest" (Gateway + Microservices) - VIA DISCOVERY
@@ -33,10 +28,6 @@ scrape_configs:
   - job_name: 'eureka-microservices'
     eureka_sd_configs:
       - server: http://host.docker.internal:8761/eureka
-
-    basic_auth:
-      username: myapp_admin
-      password: myapp_password123
 
     relabel_configs:
       # 1. Correct the path to /actuator/prometheus
