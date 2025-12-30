@@ -21,6 +21,7 @@
     </properties>
 
     <modules>
+        <module>eureka-server</module>
     </modules>
 
     <!-- <dependencyManagement>
