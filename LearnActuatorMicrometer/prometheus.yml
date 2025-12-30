@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # JOB 1: Prometheus scraping itself (NEEDS PASSWORD)
+  # Since you enabled Basic Auth on the UI, Prometheus now needs a password
+  # just to talk to itself.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: [ 'localhost:9090' ]
+    basic_auth:
+      username: admin
+      password: password123
+
+  # JOB 2: Scraping your Spring Boot App (Usually NO PASSWORD)
+  # This assumes your Actuator endpoint is open and doesn't require login.
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'host.docker.internal:8761' ]
+        # Note: Use 'host.docker.internal' if the app is running on your laptop (outside Docker).
+        # If the app is also in Docker Compose, use its service name (e.g., 'myapp:8080').

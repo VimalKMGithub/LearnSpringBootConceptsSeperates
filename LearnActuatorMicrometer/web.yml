@@ -1,0 +1,5 @@
+# web.yml
+basic_auth_users:
+  # Format is username: hashed_password
+  # The hash below is for the password: "password123"
+  admin: $2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay
