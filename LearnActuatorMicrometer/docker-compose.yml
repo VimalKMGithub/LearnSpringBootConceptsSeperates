@@ -24,24 +24,31 @@ services:
     container_name: prometheus
     ports:
       - "9090:9090"
+
+    # Loads .env file to get PROMETHEUS_PASSWORD
+    env_file:
+      - .env
+
     environment:
-      - MY_PASSWORD=${PROMETHEUS_PASSWORD} # Pulls from your .env file
+      # Pass the variable to the container
+      - MY_PASSWORD=${PROMETHEUS_PASSWORD}
+
     volumes:
-      # Map the template file
       - ./prometheus.yml.template:/etc/prometheus/prometheus.yml.template
-      # Map web.yml (keep this one static)
       - ./web.yml:/etc/prometheus/web.yml
       - prometheus_data:/prometheus
 
-    # We must use "entrypoint" to run a shell so we can use "sed"
+    # FIX IS HERE: Use $$ so Docker Compose passes the variable to the container
     entrypoint:
       - /bin/sh
       - -c
       - |
-        # 1. Replace placeholder with env var and write to a new file in /prometheus (data dir is writable)
-        sed 's/PASSWORD_PLACEHOLDER/'"$MY_PASSWORD"'/g' /etc/prometheus/prometheus.yml.template > /prometheus/prometheus.yml
+        # Use $$ to escape. This tells Docker: "Don't touch this, let the container handle it"
+        if [ -z "$$MY_PASSWORD" ]; then echo "ERROR: MY_PASSWORD is empty!"; exit 1; fi
         
-        # 2. Start Prometheus using the NEW config file we just created
+        # We use $$MY_PASSWORD here too
+        sed 's/PASSWORD_PLACEHOLDER/'"$$MY_PASSWORD"'/g' /etc/prometheus/prometheus.yml.template > /prometheus/prometheus.yml
+        
         /bin/prometheus \
           --config.file=/prometheus/prometheus.yml \
           --web.config.file=/etc/prometheus/web.yml \
