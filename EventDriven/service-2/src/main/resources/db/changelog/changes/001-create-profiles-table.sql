@@ -4,7 +4,7 @@
 CREATE TABLE profiles
 (
     id         SERIAL PRIMARY KEY,
-    user_id    UUID UNIQUE  NOT NULL, -- Links to Service 1 ID
+    user_id    UUID UNIQUE  NOT NULL, -- Links to the Auth ID from Service 1
     email      VARCHAR(255) NOT NULL,
     full_name  VARCHAR(255),
     bio        TEXT,
