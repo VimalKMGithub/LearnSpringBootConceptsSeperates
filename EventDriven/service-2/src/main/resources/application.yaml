@@ -33,5 +33,5 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
-      # Crucial: This enables the List<String> signature in Java
       type: batch
+      ack-mode: manual_immediate  # <--- ADD THIS LINE
