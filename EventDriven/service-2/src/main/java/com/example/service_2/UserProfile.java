@@ -20,6 +20,7 @@ public class UserProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // This ID comes from Service 1 (Auth Service)
     @Column(name = "user_id", nullable = false, unique = true)
     private UUID userId;
 
