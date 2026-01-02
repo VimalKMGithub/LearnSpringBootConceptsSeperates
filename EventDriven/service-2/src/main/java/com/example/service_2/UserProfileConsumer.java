@@ -32,20 +32,22 @@ public class UserProfileConsumer {
             try {
                 UserEvent event = objectMapper.readValue(json, UserEvent.class);
 
+                // --- DELETE LOGIC ---
                 if ("d".equals(event.getOp())) {
-                    // Handle Delete
                     log.info("🗑️ Deleting profile for User ID: {}", event.getId());
                     userProfileRepository.deleteByUserId(UUID.fromString(event.getId()));
-                } else {
-                    // Handle Create / Update
-                    // Check if profile exists to avoid duplicates
+                }
+                // --- CREATE / UPDATE LOGIC ---
+                else {
                     UUID uid = UUID.fromString(event.getId());
+                    // Find existing or create new builder
                     UserProfile profile = userProfileRepository.findByUserId(uid)
                             .orElse(UserProfile.builder().userId(uid).build());
 
                     profile.setEmail(event.getEmail());
                     profile.setFullName(event.getFullName());
-                    // Set default avatar if new
+
+                    // Set default avatar if it's missing
                     if (profile.getAvatarUrl() == null) {
                         profile.setAvatarUrl("https://ui-avatars.com/api/?name=" + event.getFullName());
                     }
@@ -58,7 +60,7 @@ public class UserProfileConsumer {
             }
         }
 
-        // Batch Save
+        // Batch Save (1 DB call instead of many)
         if (!profilesToSave.isEmpty()) {
             userProfileRepository.saveAll(profilesToSave);
             log.info("✅ Synced {} profiles to DB", profilesToSave.size());
