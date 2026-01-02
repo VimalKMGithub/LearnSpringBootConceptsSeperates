@@ -1,17 +1,18 @@
 input:
   kafka:
     addresses: [ "redpanda:9092" ]
-    # Debezium creates topics named: servername.schema.table
+    # Debezium will create this topic automatically (server.schema.table)
     topics: [ "dbserver1.public.users" ]
     consumer_group: "benthos_cleaner"
 
 pipeline:
   processors:
-    # 1. Map Debezium structure to your Clean structure
+    # 1. Map Debezium structure to your Service 2 structure
     - mapping: |
         root.op = this.op
         
-        # Debezium sends 'c' for create, 'u' for update, 'd' for delete
+        # 'd' = delete (use 'before' state)
+        # 'c'/'u' = create/update (use 'after' state)
         if this.op == "d" {
             root.id = this.before.id
         } else {
@@ -20,11 +21,11 @@ pipeline:
             root.full_name = this.after.full_name
         }
         
-        # Remove null fields and extra metadata
+        # Remove nulls (like 'before' during a create)
         root = root.filter(v -> v != null)
 
 output:
   kafka_franz:
     seed_brokers: [ "redpanda:9092" ]
-    topic: "user-created-events" # <--- The topic your Java App listens to
+    topic: "user-created-events" # <--- Service 2 listens here
     key: "${! this.id }"
