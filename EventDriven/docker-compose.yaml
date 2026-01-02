@@ -95,6 +95,8 @@ services:
     # ADD THIS BLOCK TO STOP THE CLUTTER:
     volumes:
       - debezium_data:/kafka/data
+      - debezium_logs:/kafka/logs   # <--- FIX 1
+      - debezium_config:/kafka/config # <--- FIX 2 (Likely the 0-byte one)
 
   # 6. REDPANDA CONNECT (The Transformer)
   # Reads Debezium Raw Data -> Cleans it -> Sends to Service 2 Topic
@@ -116,3 +118,5 @@ volumes:
   redpanda_data:
   postgres_data:
   debezium_data: # <--- New named volume
+  debezium_logs: # <--- Add this
+  debezium_config: # <--- Add this
