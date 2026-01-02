@@ -22,12 +22,14 @@ services:
       retries: 5
 
   connect:
-    image: docker.redpanda.com/redpandadata/connect:latest
+    # UPDATED: Use the free open-source image
+    image: jeffail/benthos:latest
     container_name: redpanda_connect
     restart: on-failure
     volumes:
       - ./connect.yaml:/connect.yaml
-    command: [ "run", "/connect.yaml" ]
+    # UPDATED: The command is slightly different for the open-source image
+    command: [ "-c", "/connect.yaml" ]
     depends_on:
       redpanda:
         condition: service_healthy
