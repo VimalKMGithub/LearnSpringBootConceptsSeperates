@@ -64,5 +64,5 @@ services:
       - postgres
 
 volumes:
-  #  redpanda_data:
+  redpanda_data:
   postgres_data:
