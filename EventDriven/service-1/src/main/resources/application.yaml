@@ -1,3 +1,22 @@
+server:
+  port: 8085
+
 spring:
   application:
     name: service-1
+  datasource:
+    # Connecting to the 'auth_db' we created in Postgres earlier
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: postgres
+    # If you didn't set a password in docker-compose, leave it empty or use "postgres"
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    # We use Liquibase for schema, so tell Hibernate NOT to touch the DB structure
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
