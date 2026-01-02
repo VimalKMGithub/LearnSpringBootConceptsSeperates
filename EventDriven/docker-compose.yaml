@@ -1,4 +1,5 @@
 services:
+  # 1. REDPANDA (The Event Bus)
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: redpanda
@@ -11,6 +12,8 @@ services:
       - --smp 1
       - --memory 1G
       - --mode dev-container
+      # Internal = redpanda:9092 (for Docker containers)
+      # External = localhost:9094 (for your Java Service 2)
       - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:9094
       - --advertise-kafka-addr internal://redpanda:9092,external://localhost:9094
     volumes:
@@ -21,22 +24,65 @@ services:
       timeout: 5s
       retries: 5
 
+  # 2. POSTGRES (The Database)
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: postgres -c shared_buffers=128MB -c wal_level=logical
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      # Creates 'service_1' and 'service_2' DBs on startup
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. REDPANDA CONSOLE (The UI)
+  redpanda_console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: redpanda_console
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    depends_on:
+      - redpanda
+
+  # 4. ADMINER (Database UI)
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "8082:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+
+  # 5. DEBEZIUM (The CDC Engine)
+  # Reads Postgres WAL logs -> Sends raw JSON to Redpanda
   debezium:
     image: quay.io/debezium/connect:latest
     container_name: debezium
     ports:
-      - "8083:8083"
+      - "8083:8083" # API Port for Postman
     environment:
       - BOOTSTRAP_SERVERS=redpanda:9092
       - GROUP_ID=1
       - CONFIG_STORAGE_TOPIC=my_connect_configs
       - OFFSET_STORAGE_TOPIC=my_connect_offsets
       - STATUS_STORAGE_TOPIC=my_connect_statuses
-      # Crucial for single-node Redpanda
+      # Crucial settings for single-node Redpanda
       - CONFIG_STORAGE_REPLICATION_FACTOR=1
       - OFFSET_STORAGE_REPLICATION_FACTOR=1
       - STATUS_STORAGE_REPLICATION_FACTOR=1
-      # Output JSON without heavy schemas
+      # Disable schemas to keep JSON clean
       - KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
       - VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
       - CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE=false
@@ -47,47 +93,20 @@ services:
       postgres:
         condition: service_healthy
 
-  postgres:
-    image: postgres:alpine
-    container_name: postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-      # You can leave this as the default 'postgres' or just remove it
-      POSTGRES_DB: postgres
-    command: postgres -c shared_buffers=128MB -c wal_level=logical
+  # 6. REDPANDA CONNECT (The Transformer)
+  # Reads Debezium Raw Data -> Cleans it -> Sends to Service 2 Topic
+  connect:
+    image: jeffail/benthos:latest # Open Source Version (Free)
+    container_name: redpanda_connect
+    restart: on-failure
     volumes:
-      - postgres_data:/var/lib/postgresql
-      # MOUNT THE SCRIPT HERE:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redpanda_console:
-    image: docker.redpanda.com/redpandadata/console:latest
-    container_name: redpanda_console
-    ports:
-      - "8080:8080"
-    environment:
-      KAFKA_BROKERS: redpanda:9092
-      REDPANDA_ADMINAPI_ENABLED: "true"
-      REDPANDA_ADMINAPI_URLS: "http://redpanda:9644"
+      - ./connect.yaml:/connect.yaml
+    command: [ "-c", "/connect.yaml" ]
     depends_on:
-      - redpanda
-
-  adminer:
-    image: adminer:latest
-    container_name: adminer
-    ports:
-      - "8082:8080"
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-    depends_on:
-      - postgres
+      redpanda:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
 volumes:
   redpanda_data:
