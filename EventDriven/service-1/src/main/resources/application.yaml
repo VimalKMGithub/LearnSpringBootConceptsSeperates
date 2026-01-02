@@ -6,7 +6,7 @@ spring:
     name: service-1
   datasource:
     # Connecting to the 'auth_db' we created in Postgres earlier
-    url: jdbc:postgresql://localhost:5432/auth_db
+    url: jdbc:postgresql://localhost:5432/service_1
     username: postgres
     # If you didn't set a password in docker-compose, leave it empty or use "postgres"
     password: postgres
