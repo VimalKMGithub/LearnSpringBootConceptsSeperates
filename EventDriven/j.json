@@ -1,0 +1,14 @@
+# POST http://localhost:8083/connectors/
+{
+"name": "service2-connector",  // <--- NEW UNIQUE NAME
+"config": {
+"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+"database.hostname": "postgres",
+"database.port": "5432",
+"database.dbname" : "service_2", // <--- LISTENING TO SERVICE 2 DB
+"database.server.name": "dbserver2", // <--- NEW TOPIC PREFIX
+"topic.prefix": "dbserver2",
+"plugin.name": "pgoutput",
+"table.include.list": "public.profiles"
+}
+}

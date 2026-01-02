@@ -1,0 +1,53 @@
+input:
+  kafka:
+    addresses: ["redpanda:9092"]
+    # Option A: List specific tables
+    # topics: ["dbserver1.public.users", "dbserver1.public.orders"]
+
+    # Option B: Listen to ALL tables in the public schema (The Pro Move)
+    topics: ["dbserver1.public.*"]
+    consumer_group: "benthos_cleaner"
+
+
+
+
+
+
+
+
+pipeline:
+  processors:
+    # 1. Logic for USERS Table
+    - switch:
+        - check: meta("kafka_topic") == "dbserver1.public.users"
+          processors:
+            - mapping: |
+                root.op = this.op
+                root.id = if this.op == "d" { this.before.id } else { this.after.id }
+                if this.op != "d" {
+                    root.email = this.after.email
+                    root.full_name = this.after.full_name
+                }
+                root = root.filter(v -> v != null)
+                # Set a metadata field for where to send this later
+                meta target_topic = "user-created-events"
+
+    # 2. Logic for ORDERS Table (Hypothetical Example)
+    - switch:
+        - check: meta("kafka_topic") == "dbserver1.public.orders"
+          processors:
+            - mapping: |
+                root.op = this.op
+                root.order_id = if this.op == "d" { this.before.id } else { this.after.id }
+                if this.op != "d" {
+                   root.amount = this.after.amount
+                   root.product = this.after.product_name
+                }
+                meta target_topic = "order-placed-events"
+
+output:
+  kafka_franz:
+    seed_brokers: ["redpanda:9092"]
+    # Send to the topic we decided in the logic above
+    topic: "${! meta(\"target_topic\") }"
+    key: "${! this.id }"
