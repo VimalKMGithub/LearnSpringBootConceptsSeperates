@@ -1,6 +1,5 @@
 input:
   postgres_cdc:
-    # UPDATED DSN: Pointing to 'service_1' instead of 'auth_db'
     dsn: "postgres://postgres:postgres@postgres:5432/service_1?sslmode=disable"
     slot_name: "service_1_cdc_slot"
     schema: "public"
@@ -26,11 +25,11 @@ pipeline:
         if root.op != "d" {
             root.email = this.data.email
             root.full_name = this.data.full_name
-            # Password is NOT mapped, so it stays secret!
         }
 
 output:
   kafka_franz:
     seed_brokers: [ "redpanda:9092" ]
     topic: "user-created-events"
-    key: "${! json('id') }"
+    # FIXED LINE BELOW:
+    key: "${! this.id }"
