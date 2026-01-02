@@ -1,0 +1,68 @@
+services:
+  #  redpanda:
+  #    image: docker.redpanda.com/redpandadata/redpanda:latest
+  #    container_name: redpanda
+  #    ports:
+  #      - "9092:9092"
+  #      - "9094:9094"
+  #      - "9644:9644"
+  #    command:
+  #      - redpanda start
+  #      - --smp 1
+  #      - --memory 1G
+  #      - --mode dev-container
+  #      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:9094
+  #      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:9094
+  #    volumes:
+  #      - redpanda_data:/var/lib/redpanda/data
+  #    healthcheck:
+  #      test: [ "CMD-SHELL", "rpk cluster health | grep -E 'Healthy|OK'" ]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
+
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      # You can leave this as the default 'postgres' or just remove it
+      POSTGRES_DB: postgres
+    command: postgres -c shared_buffers=128MB -c wal_level=logical
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      # MOUNT THE SCRIPT HERE:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+#  redpanda_console:
+#    image: docker.redpanda.com/redpandadata/console:latest
+#    container_name: redpanda_console
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      KAFKA_BROKERS: redpanda:9092
+#      REDPANDA_ADMINAPI_ENABLED: "true"
+#      REDPANDA_ADMINAPI_URLS: "http://redpanda:9644"
+#    depends_on:
+#      - redpanda
+#
+#  adminer:
+#    image: adminer:latest
+#    container_name: adminer
+#    ports:
+#      - "8082:8080"
+#    environment:
+#      ADMINER_DEFAULT_SERVER: postgres
+#    depends_on:
+#      - postgres
+
+volumes:
+  #  redpanda_data:
+  postgres_data:
