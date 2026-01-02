@@ -92,6 +92,9 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    # ADD THIS BLOCK TO STOP THE CLUTTER:
+    volumes:
+      - debezium_data:/kafka/data
 
   # 6. REDPANDA CONNECT (The Transformer)
   # Reads Debezium Raw Data -> Cleans it -> Sends to Service 2 Topic
@@ -108,6 +111,8 @@ services:
       postgres:
         condition: service_healthy
 
+# AND ADD THIS TO THE BOTTOM 'volumes' LIST:
 volumes:
   redpanda_data:
   postgres_data:
+  debezium_data: # <--- New named volume
