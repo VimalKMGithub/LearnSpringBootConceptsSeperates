@@ -1,3 +1,37 @@
+server:
+  port: 8086
+
 spring:
   application:
     name: service-2
+
+  # Database Connection (Connects to service_2)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/service_2
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  # Kafka Consumer Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: user-service-group
+      auto-offset-reset: earliest
+      # Fetch 500 records at a time (Batching)
+      max-poll-records: 500
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      # Crucial: This enables the List<String> signature in Java
+      type: batch
