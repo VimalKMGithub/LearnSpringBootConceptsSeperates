@@ -3,8 +3,8 @@
 -- changeset vimal:001-create-profiles-table
 CREATE TABLE profiles
 (
-    id         SERIAL PRIMARY KEY,
-    user_id    UUID UNIQUE  NOT NULL, -- Links to the Auth ID from Service 1
+    id         BIGSERIAL PRIMARY KEY, -- <--- CHANGED FROM SERIAL TO BIGSERIAL
+    user_id    UUID UNIQUE  NOT NULL,
     email      VARCHAR(255) NOT NULL,
     full_name  VARCHAR(255),
     bio        TEXT,
