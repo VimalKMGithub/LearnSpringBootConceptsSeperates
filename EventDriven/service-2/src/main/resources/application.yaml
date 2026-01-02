@@ -5,11 +5,11 @@ spring:
   application:
     name: service-2
 
-  # Database Connection (Connects to service_2)
+  # Database Connection (Connects to 'service_2' DB)
   datasource:
     url: jdbc:postgresql://localhost:5432/service_2
     username: postgres
-    password: postgres
+    password: postgres # Empty or "postgres" depending on your setup
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -28,7 +28,7 @@ spring:
     consumer:
       group-id: user-service-group
       auto-offset-reset: earliest
-      # Fetch 500 records at a time (Batching)
+      # Fetch up to 500 records at once (Batching)
       max-poll-records: 500
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
