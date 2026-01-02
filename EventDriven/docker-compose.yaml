@@ -42,8 +42,10 @@ services:
       - CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE=false
       - CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE=false
     depends_on:
-      - redpanda
-      - postgres
+      redpanda:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:alpine
