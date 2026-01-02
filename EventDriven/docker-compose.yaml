@@ -21,6 +21,19 @@ services:
       timeout: 5s
       retries: 5
 
+  connect:
+    image: docker.redpanda.com/redpandadata/connect:latest
+    container_name: redpanda_connect
+    restart: on-failure
+    volumes:
+      - ./connect.yaml:/connect.yaml
+    command: [ "run", "/connect.yaml" ]
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:alpine
     container_name: postgres
