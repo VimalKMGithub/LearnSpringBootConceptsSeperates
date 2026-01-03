@@ -1,0 +1,18 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: service-3
+
+  kafka:
+    # Use 9094 (External/Localhost) just like Service 2
+    bootstrap-servers: localhost:9094
+    consumer:
+      # CRITICAL: This MUST be different from Service 2!
+      # If it's the same, they will fight over messages.
+      # If it's different, they BOTH get the message.
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
